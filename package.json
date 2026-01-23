@@ -1,0 +1,43 @@
+{
+  "name": "turant-logistics-api-gateway",
+  "version": "1.0.0",
+  "description": "API Gateway for Turant Logistics Microservices",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest",
+    "lint": "eslint src/**/*.js",
+    "lint:fix": "eslint src/**/*.js --fix"
+  },
+  "keywords": [
+    "api-gateway",
+    "microservices",
+    "turant-logistics"
+  ],
+  "author": "Hibbanur Rahman",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-http-proxy": "^2.1.2",
+    "express-rate-limit": "^6.10.0",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.0.0",
+    "http-proxy-middleware": "^2.0.6",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "redis": "^4.6.8",
+    "winston": "^3.10.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.47.0",
+    "jest": "^29.6.2",
+    "nodemon": "^3.0.1",
+    "supertest": "^6.3.3"
+  }
+}
