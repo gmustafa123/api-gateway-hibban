@@ -15,7 +15,7 @@
     "microservices",
     "turant-logistics"
   ],
-  "author": "Hibbanur Rahman",
+  "author": "Ghulam Mustafa",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^2.2.0",
