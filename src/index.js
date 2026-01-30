@@ -217,12 +217,12 @@ app.use(
 
 // Proxy middleware for inventory service
 app.use(
-  "/api/inventory",
+  "/api/inv",
   proxy(INVENTORY_SERVICE_URL, {
     proxyReqPathResolver: function (req) {
       // Convert /register to /api/register for auth service
       const originalPath = req.url;
-      const newPath = "/api/inventory" + originalPath;
+      const newPath = "/api/inv" + originalPath;
       const timestamp = new Date().toISOString();
       console.log(
         `[${timestamp}] API Gateway | Proxying to Inventory Service: ${originalPath} -> ${newPath}`,
