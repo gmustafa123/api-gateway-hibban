@@ -123,10 +123,13 @@ const AUTH_SERVICE_URL =
 const IAM_SERVICE_URL = process.env.IAM_SERVICE_URL || "http://localhost:3002";
 const INVENTORY_SERVICE_URL =
   process.env.INVENTORY_SERVICE_URL || "http://localhost:3003";
+const CUSTOMER_SERVICE_URL =
+  process.env.CUSTOMER_SERVICE_URL || "http://localhost:3004";
 
 console.log(`Using AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}`);
 console.log(`Using INVENTORY_SERVICE_URL: ${INVENTORY_SERVICE_URL}`);
 console.log(`Using IAM_SERVICE_URL: ${IAM_SERVICE_URL}`);
+console.log(`Using CUSTOMER_SERVICE_URL: ${CUSTOMER_SERVICE_URL}`);
 
 /**
  * Setup service routes and proxies
@@ -250,6 +253,41 @@ app.use(
   }),
 );
 
+// Proxy middleware for customer service
+app.use(
+  "/api/cus",
+  proxy(CUSTOMER_SERVICE_URL, {
+    proxyReqPathResolver: function (req) {
+      // Convert /register to /api/register for auth service
+      const originalPath = req.url;
+      const newPath = "/api/cus" + originalPath;
+      const timestamp = new Date().toISOString();
+      console.log(
+        `[${timestamp}] API Gateway | Proxying to Customer Service: ${originalPath} -> ${newPath}`,
+      );
+      return newPath;
+    },
+    userResDecorator: function (proxyRes, proxyResData, userReq, userRes) {
+      const timestamp = new Date().toISOString();
+      console.log(
+        `[${timestamp}] API Gateway | Customer Service Response: ${proxyRes.statusCode}`,
+      );
+      return proxyResData;
+    },
+    proxyErrorHandler: function (err, res, next) {
+      console.error("[Customer Service Proxy Error]:", err);
+      if (!res.headersSent) {
+        res.status(500).json({
+          status: "error",
+          message: "Customer service unavailable",
+          error: err.message,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    },
+  }),
+);
+
 // API documentation
 app.get("/api", (req, res) => {
   res.status(200).json({
@@ -261,6 +299,7 @@ app.get("/api", (req, res) => {
       authz: "/api/authz/*",
       iam: "/api/iam/*",
       inventory: "/api/inventory/*",
+      cus: "/api/cus/*",
     },
     documentation: "https://docs.ics.com",
     timestamp: new Date().toISOString(),
@@ -299,6 +338,7 @@ server.listen(PORT, () => {
   console.log(`Proxying /api/authz to ${AUTH_SERVICE_URL}`);
   console.log(`Proxying /api/iam to ${IAM_SERVICE_URL}`);
   console.log(`Proxying /api/inventory to ${INVENTORY_SERVICE_URL}`);
+  console.log(`Proxying /api/cus to ${CUSTOMER_SERVICE_URL}`);
 });
 
 // Graceful shutdown
