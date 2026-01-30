@@ -125,11 +125,14 @@ const INVENTORY_SERVICE_URL =
   process.env.INVENTORY_SERVICE_URL || "http://localhost:3003";
 const CUSTOMER_SERVICE_URL =
   process.env.CUSTOMER_SERVICE_URL || "http://localhost:3004";
+const WAREHOUSE_SERVICE_URL =
+  process.env.WAREHOUSE_SERVICE_URL || "http://localhost:3005";
 
 console.log(`Using AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}`);
 console.log(`Using INVENTORY_SERVICE_URL: ${INVENTORY_SERVICE_URL}`);
 console.log(`Using IAM_SERVICE_URL: ${IAM_SERVICE_URL}`);
 console.log(`Using CUSTOMER_SERVICE_URL: ${CUSTOMER_SERVICE_URL}`);
+console.log(`Using WAREHOUSE_SERVICE_URL: ${WAREHOUSE_SERVICE_URL}`);
 
 /**
  * Setup service routes and proxies
@@ -142,8 +145,10 @@ app.get("/gateway/health", (req, res) => {
     timestamp: new Date().toISOString(),
     services: {
       auth: AUTH_SERVICE_URL,
-      order: INVENTORY_SERVICE_URL,
-      kyc: KYC_SERVICE_URL,
+      iam: IAM_SERVICE_URL,
+      inventory: INVENTORY_SERVICE_URL,
+      customer: CUSTOMER_SERVICE_URL,
+      warehouse: WAREHOUSE_SERVICE_URL,
     },
   });
 });
@@ -280,6 +285,39 @@ app.use(
         res.status(500).json({
           status: "error",
           message: "Customer service unavailable",
+          error: err.message,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    },
+  }),
+);
+// Proxy middleware for warehouse service
+app.use(
+  "/api/whms",
+  proxy(WAREHOUSE_SERVICE_URL, {
+    proxyReqPathResolver: function (req) {
+      const originalPath = req.url;
+      const newPath = "/api/whms" + originalPath;
+      const timestamp = new Date().toISOString();
+      console.log(
+        `[${timestamp}] API Gateway | Proxying to Warehouse Service: ${originalPath} -> ${newPath}`,
+      );
+      return newPath;
+    },
+    userResDecorator: function (proxyRes, proxyResData, userReq, userRes) {
+      const timestamp = new Date().toISOString();
+      console.log(
+        `[${timestamp}] API Gateway | Warehouse Service Response: ${proxyRes.statusCode}`,
+      );
+      return proxyResData;
+    },
+    proxyErrorHandler: function (err, res, next) {
+      console.error("[Warehouse Service Proxy Error]:", err);
+      if (!res.headersSent) {
+        res.status(500).json({
+          status: "error",
+          message: "Warehouse service unavailable",
           error: err.message,
           timestamp: new Date().toISOString(),
         });
